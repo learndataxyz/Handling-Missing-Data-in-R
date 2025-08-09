@@ -1,0 +1,126 @@
+---
+title: "Missing Data Analysis"
+subtitle: "Understanding  Missing Values in R"
+author: "Adejumo Ridwan Suleiman"
+date: today
+format: 
+  revealjs:
+    theme: default
+    transition: slide
+    highlight-style: github
+    code-line-numbers: true
+    incremental: true
+---
+
+# Understanding Missing Data
+
+## What is Missing Data? 📖
+
+Missing data occurs when **no data value is stored** for a variable in an observation. In datasets, this appears as:
+
+- `NA` (Not Available) in R
+- Empty cells in spreadsheets  
+- Blank responses in surveys
+- System failures during data collection
+
+
+
+# Types of Missing Data 🧩
+
+
+## MCAR - Missing Completely at Random
+
+- **Definition**: Missingness is unrelated to observed or unobserved data
+- **Example**: Survey responses lost due to computer malfunction
+- **Implication**: Safe to use listwise deletion
+
+## MAR - Missing at Random  
+
+- **Definition**: Missingness depends on observed data, but not unobserved data
+- **Example**: Older participants more likely to skip technology questions
+- **Implication**: Can be handled with multiple imputation
+
+## MNAR - Missing Not at Random
+
+- **Definition**: Missingness depends on the unobserved (missing) values themselves
+- **Example**: High earners refusing to report income
+- **Implication**: Requires specialized modeling approaches
+
+
+
+## Impact on Analysis ⚠️
+
+```{r}
+#| echo: true
+#| eval: false
+
+# Original dataset: 1000 observations
+# After listwise deletion: 300 observations
+# Lost 70% of data!
+```
+
+### Consequences:
+
+- **Reduced sample size** → Lower statistical power
+- **Biased estimates** → Incorrect conclusions  
+- **Invalid inferences** → Poor generalizability
+- **Increased standard errors** → Wider confidence intervals
+
+
+
+# Spotting Missing Data in R 🔍
+
+## Basic Detection
+
+```{r}
+#| echo: true
+#| eval: false
+
+# Check for any missing values
+any(is.na(data))
+
+# Count missing values per column
+colSums(is.na(data))
+
+# Proportion of missing data
+mean(is.na(data$variable))
+```
+
+## Visualization Tools
+
+```{r}
+#| echo: true
+#| eval: false
+
+# Using VIM package
+library(VIM)
+VIM::aggr(data, col = c('navyblue', 'red'))
+
+# Using naniar package  
+library(naniar)
+naniar::vis_miss(data)
+naniar::gg_miss_var(data)
+```
+
+## Pattern Analysis
+```{r}
+#| echo: true
+#| eval: false
+
+# Missing data patterns
+library(mice)
+mice::md.pattern(data)
+
+# Correlations between missingness
+naniar::gg_miss_upset(data)
+```
+
+
+## Key Takeaways 💡
+
+1. **Identify the mechanism** → Choose appropriate handling method
+2. **Visualize patterns** → Understand missingness structure  
+3. **Don't ignore it** → Missing data affects all downstream analysis
+4. **Document decisions** → Report how missing data was handled
+
+> *"The way you handle missing data can make or break your analysis"*
