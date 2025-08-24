@@ -1,0 +1,47 @@
+
+```{r}
+library(naniar)
+library(ggplot2) # naniar builds on ggplot2
+
+# Sample dataset with missing values
+data <- data.frame(
+  ID    = 1:8,
+  Name  = c("Alice", "Bob", "Charlie", "David", "Eve", NA, "Grace", "Henry"),
+  Age   = c(25, NA, 30, 28, NA, 35, 29, NA),
+  Score = c(90, 85, NA, 88, 92, 80, NA, 75)
+)
+
+data
+
+```
+
+```{r}
+# 1Visualize missingness across the whole dataset
+vis_miss(data)
+
+
+```
+
+
+```{r}
+#  Show missing value counts per variable in a bar plot
+gg_miss_var(data)
+
+
+```
+
+- vis_miss() → Gives a matrix-style view of missingness for each variable and observation.
+
+- gg_miss_var() → Gives a variable-level bar chart of NA counts, useful for quickly spotting problematic columns.
+
+```{r}
+# numerical summary for missing
+miss_var_summary(data)
+miss_case_summary(data)
+```
+
+```{r}
+# statistical test for missing
+mcar_test(data)
+```
+

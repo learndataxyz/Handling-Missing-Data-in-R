@@ -1,0 +1,42 @@
+
+- Listwise: drops any row with *any* NA for *all* calculations
+
+- Pairwise: drops rows with NA only for the variables being compared
+
+```{r}
+data <- data.frame(
+  X1 = c(1, 2, NA, 4, 5),
+  X2 = c(2, NA, 3, 4, 5),
+  X3 = c(NA, 2, 3, 4, NA)
+)
+
+data
+
+
+```
+
+```{r}
+# Remove any row with at least one NA
+listwise_data <- na.omit(data)
+
+listwise_data
+
+
+```
+
+```{r}
+# Correlation matrix with listwise deletion
+cor_listwise <- cor(data, use = "complete.obs")
+cor_listwise
+
+
+```
+
+```{r}
+
+# Pairwise deletion happens automatically if you set use="pairwise.complete.obs"
+cor_pairwise <- cor(data, use = "pairwise.complete.obs")
+cor_pairwise
+```
+
+

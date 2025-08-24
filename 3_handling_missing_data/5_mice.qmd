@@ -1,0 +1,66 @@
+
+```{r}
+library(mice)
+library(dplyr)
+
+# Example dataset with missing values
+df <- data.frame(
+  group = rep(c("A", "B"), each = 5),
+  score = c(5, 8, NA, 7, NA, 6, 9, 10, NA, 4),
+  age   = c(21, 22, 20, NA, 23, 25, 24, NA, 26, 27)
+)
+
+df
+
+
+```
+
+```{r}
+# Perform multiple imputations (m = 5 means 5 different imputed datasets)
+
+imp <- mice(df, m = 5, method = "pmm", seed = 123)
+
+# 'method = "pmm"' is Predictive Mean Matching (good for numeric)
+
+# Summary of imputation process
+imp
+
+```
+
+```{r}
+
+
+# Get the first completed dataset
+df_complete1 <- complete(imp, 1)
+
+df_complete1
+
+
+```
+
+```{r}
+# Get a dataset with the mean across imputations
+df_pooled <- complete(imp, "long") |>
+  group_by(.id) |>
+  summarise(across(where(is.numeric), mean), .groups = "drop")
+
+df_pooled
+
+
+```
+
+```{r}
+# mice() does not have a direct 'by' argument, so you can split-apply-combine
+
+df_mice_group <- df |>
+  group_split(group) |>
+  lapply(function(sub_df) {
+    imp_sub <- mice(sub_df, m = 3, method = "pmm", seed = 123)
+    complete(imp_sub, 1)  # take first imputed dataset per group
+  }) |>
+  bind_rows()
+
+df_mice_group
+
+```
+

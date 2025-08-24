@@ -1,6 +1,6 @@
 ---
-title: "Missing Data Analysis"
-subtitle: "Understanding  Missing Values in R"
+title: "Understanding  Missing Values in R"
+subtitle: "Handling Missing Data in R"
 author: "Adejumo Ridwan Suleiman"
 date: today
 format: 

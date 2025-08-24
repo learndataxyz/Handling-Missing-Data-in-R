@@ -1,0 +1,51 @@
+
+```{r}
+
+# Sample data frame with missing values
+data <- data.frame(
+  Name   = c("Alice", "Bob", "Charlie", NA, "Eve"),
+  Age    = c(25, NA, 30, 28, NA),
+  Score  = c(90, 85, NA, 88, 92)
+)
+
+data
+
+
+```
+
+```{r}
+# Using is.na() - Identify missing values (TRUE where NA exists)
+is.na(data)
+
+
+
+```
+
+
+```{r}
+# Count missing values per column
+colSums(is.na(data))
+
+
+```
+
+```{r}
+# Using summary() - Quick overview of the dataset
+summary(data)
+
+
+```
+
+```{r}
+# Using complete.cases() - Find rows without missing values
+complete.cases(data)
+
+
+```
+
+```{r}
+# Keep only complete rows (remove any row with NA)
+clean_data <- data[complete.cases(data), ]
+clean_data
+```
+

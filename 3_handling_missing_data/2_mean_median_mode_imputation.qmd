@@ -1,0 +1,63 @@
+
+```{r}
+# Load necessary package
+library(dplyr)
+
+# Sample data with missing values
+df <- data.frame(
+  id = 1:10,
+  score = c(5, 8, NA, 7, NA, 6, 9, 10, NA, 4)
+)
+
+df
+
+
+
+```
+
+```{r}
+# Mean Imputation
+mean_value <- mean(df$score, na.rm = TRUE)
+df$score_mean_imp <- ifelse(is.na(df$score), mean_value, df$score)
+
+mean_value
+```
+
+```{r}
+# Median Imputation
+median_value <- median(df$score, na.rm = TRUE)
+df$score_median_imp <- ifelse(is.na(df$score), median_value, df$score)
+
+median_value
+```
+
+```{r}
+# Mode Function (Base R)
+get_mode <- function(v) {
+  uniq_vals <- unique(v[!is.na(v)])
+  uniq_vals[which.max(tabulate(match(v, uniq_vals)))]
+}
+
+mode_value <- get_mode(df$score)
+df$score_mode_imp <- ifelse(is.na(df$score), mode_value, df$score)
+
+df
+
+
+```
+
+```{r}
+# using dplyr
+
+# Using mutate and replace_na
+df_dplyr <- df |>
+  select(id, score) |>
+  mutate(
+    score_mean_imp = if_else(is.na(score), mean(score, na.rm = TRUE), score),
+    score_median_imp = if_else(is.na(score), median(score, na.rm = TRUE), score),
+    score_mode_imp = if_else(is.na(score), get_mode(score), score)
+  )
+
+df_dplyr
+```
+

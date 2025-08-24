@@ -1,0 +1,87 @@
+```{r}
+library(VIM)
+library(dplyr)
+
+```
+
+
+```{r}
+# Set seed for reproducibility
+set.seed(123)
+
+# Create a dataframe with 1000 rows
+n <- 1000
+df <- data.frame(
+  id = 1:n,
+  age = sample(18:60, n, replace = TRUE),
+  income = sample(20000:100000, n, replace = TRUE),
+  score = runif(n, 0, 1),
+  gender = sample(c("Male", "Female", "Other"), n, replace = TRUE)
+)
+
+# Function to randomly introduce missing values
+make_missing <- function(x, prop = 0.2) {
+  n <- length(x)
+  missing_idx <- sample(1:n, size = floor(prop * n))
+  x[missing_idx] <- NA
+  return(x)
+}
+
+# Apply random missingness to columns (except id)
+df$age    <- make_missing(df$age, prop = 0.25)      # 25% missing
+df$income <- make_missing(df$income, prop = 0.3)    # 30% missing
+df$score  <- make_missing(df$score, prop = 0.15)    # 15% missing
+df$gender <- make_missing(df$gender, prop = 0.1)    # 10% missing
+
+# Show first 10 rows
+print(head(df, 10))
+
+
+```
+
+```{r}
+a <- aggr(df, plot = FALSE)
+plot(a, numbers = TRUE, prop = FALSE)
+```
+```{r}
+sapply(df, function(x)sum(is.na(x)))
+```
+
+## Donor based methods
+
+```{r}
+# start imputing age based on other variables
+imp_hotdeck <- hotdeck(df, variable = "age")  # hotdeck imputation
+
+imp_knn <- kNN(df, variable = "age") # kNN imputation
+
+# used for cat, impute gender based on other variables
+imp_match <- matchImpute(df, variable = "gender", match_var = c("income","score","age")) # match imputation
+
+aggr(imp_knn, delimiter = "_imp")
+```
+```{r}
+aggr(imp_match, delimiter = "_imp")
+```
+```{r}
+head(imp_knn)
+```
+```{r}
+sapply(imp_knn, function(x)sum(is.na(x)))
+```
+
+## EM-PCA
+
+```{r}
+df_num <- df |> 
+  dplyr::select(-gender)
+imputed <- impPCA(df_num, method = "mcd", boot=TRUE)[[1]]
+aggr(imputed)
+```
+## Iterative Robust Model-based Imputation (IRMI)
+
+```{r}
+imp_irmi <- irmi(df)
+imp_irmi
+```
+

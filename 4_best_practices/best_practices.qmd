@@ -1,0 +1,245 @@
+---
+title: "Best Practices & Common Pitfalls"
+subtitle: "Handling Missing Data in R"
+format: 
+  revealjs:
+    theme: default
+    slide-number: true
+    chalkboard: true
+    preview-links: auto
+    css: styles.css
+execute:
+  echo: true
+  warning: false
+  message: false
+---
+
+# When to use each method
+
+## When to use each method
+
+- **Listwise deletion**: simple, unbiased only if MCAR, reduces sample size. Use when missingness is rare and MCAR plausible.
+
+- **Single-value imputation (mean/median/mode)**: easy but underestimates variance and can bias relationships. Use for quick exploratory visuals or when missingness is tiny and you explicitly note the limitations.
+
+##  When to use each method (contd)
+
+- **Group-wise / conditional imputation**: better than global mean when groups differ (e.g. impute by strata).
+
+- **KNN imputation**: nonparametric, can preserve local structure but sensitive to scaling and distance metric; consider when missingness is moderate and features are similar.
+
+## When to use each method (contd)
+
+- **Multiple Imputation (mice, MI)**: preferred for many inferential tasks — preserves uncertainty by creating multiple completed datasets and pooling.
+
+- **Model-based approaches / full-information maximum likelihood / joint modeling**: use when modeling framework supports it (e.g. structural equation modeling).
+
+---
+
+## Decision guide
+
+1. Is missingness rare (< 2–5%)? If yes, simple methods may suffice (but state limitations).
+2. Is missingness MCAR? If yes, deletion safe.
+3. Do you need correct variance estimates / inference? Use multiple imputation.
+4. Are you training predictive models? Focus on predictive performance and make sure imputation respects resampling (no leakage).
+
+
+
+# Avoiding data leakage
+
+## Avoiding data leakage
+
+**Data leakage** happens when information from the test/holdout data influences the training/processing steps.
+
+Common leakage sources with missing data:
+
+- Imputing using statistics calculated on the whole dataset (mean, median) **before** splitting into train/test.
+- Using outcome information in predictors during imputation if you are predicting that same outcome without proper separation.
+- Scaling / feature engineering using full-dataset parameters.
+
+## Avoiding data leakage (contd)
+
+**Best practices**
+
+- Always split into train/test (or use resampling) *first*, then compute imputation, scaling, and other preprocessing only on the training set and apply to the test set.
+- Use an organized pipeline (e.g., `recipes` + `workflows` in tidymodels) that is applied within resampling.
+
+
+
+## Example: leakage trap (bad)
+
+```r
+library(tidyverse)
+# BAD: calculating median on full data
+median_age <- median(df$age, na.rm = TRUE)
+df$age[is.na(df$age)] <- median_age
+# then splitting -> leaked information from future test set
+```
+
+**Fix**: compute median on training only or use a recipe/workflow.
+
+
+# Imputation + cross-validation — principles
+
+## Imputation + cross-validation — principles
+
+- **Rule**: Any data-derived parameter (imputation model, scaling, PCA) must be estimated on the *training* partition only and then applied to held-out data.
+
+- For **single imputation**: fit imputer on training and apply to test.
+- For **multiple imputation**: perform imputation within each resample. Then fit model(s) on each completed training set and evaluate on the corresponding completed test set — combine results appropriately.
+
+## Imputation + cross-validation — principles
+
+We'll show two workflows:
+
+1. `recipes`/`workflows` (tidymodels) for single imputation inside resampling.
+2. Manual `mice` inside resampling for proper MI + CV.
+
+
+
+## Workflow A — tidymodels + recipes (impute within resampling)
+
+```r
+library(tidymodels)
+library(naniar)
+
+# example dataset
+data <- nhanes %>% select(age, bmi, hyp)
+
+set.seed(123)
+folds <- vfold_cv(data, v = 5)
+
+rec <- recipe(hyp ~ ., data = data) %>%
+  step_impute_median(all_numeric_predictors()) %>%
+  step_normalize(all_numeric_predictors())
+
+wf <- workflow() %>%
+  add_recipe(rec) %>%
+  add_model(logistic_reg() %>% set_engine("glm"))
+
+# resample fit: recipe steps (imputation + normalize) are estimated for each training split
+res <- fit_resamples(wf, folds, control = control_resamples(save_pred = TRUE))
+res
+```
+
+## Workflow A — tidymodels + recipes (impute within resampling)
+
+Notes:
+
+- `step_impute_median()` will be estimated on each split's training set. This avoids leakage.
+
+- Swap in `step_impute_knn()` or other imputation steps if available in your setup.
+
+
+
+## Workflow B — Multiple imputation (`mice`) inside resampling
+
+Below is a robust pattern: 
+
+```r
+library(rsample)
+library(mice)
+library(purrr)
+
+set.seed(2025)
+folds <- vfold_cv(data, v = 5)
+
+fit_on_split <- function(split) {
+  train <- analysis(split)
+  test  <- assessment(split)
+
+  # 1) run mice on train
+  imp <- mice(train, m = 5, printFlag = FALSE)
+
+  # 2) for each completed train dataset, fit model
+  models <- map(1:imp$m, ~ glm(hyp ~ age + bmi, data = complete(imp, .x), family = binomial))
+
+  # 3) create imputed versions of the test set using predictive means from training
+  # A simple approach: use mice to impute test using the same predictor matrix and methods
+  # but *do not* include outcome values from the test
+  test_imp <- mice::mice(test, m = 5, printFlag = FALSE)
+
+  # 4) predict on each completed test and pool
+  preds <- map(1:5, ~ predict(models[[.x]], newdata = complete(test_imp, .x), type = 'response'))
+
+  # average or pool performance appropriately
+  list(models = models, preds = preds)
+}
+
+results <- map(folds$splits, fit_on_split)
+```
+## Workflow B — Multiple imputation (`mice`) inside resampling (manual approach)
+
+### Caveats & improvements:
+
+- More careful approaches align the imputation models for test set to the versions estimated on train (e.g., export imputation `predictorMatrix` and models).
+
+- Packages & helper functions exist to simplify MI + resampling; check for up-to-date helpers in your ecosystem.
+
+
+
+## Practical tips when using `mice` with prediction tasks
+
+- Do not include the outcome variable from the test set when imputing it.
+
+- Ensure imputation models use only training-derived parameters.
+
+- For inference, use `with()` + `pool()` to combine estimates across imputations.
+
+## Example (pooling coefficient estimates):
+
+```r
+imp <- mice(train, m = 5, printFlag = FALSE)
+fit_mi <- with(imp, glm(hyp ~ age + bmi, family = binomial))
+pooled <- pool(fit_mi)
+summary(pooled)
+```
+
+
+
+# Documenting your work — why it matters
+
+Good documentation ensures reproducibility and helps reviewers trust your choices.
+
+## Documenting your work — why it matters
+
+
+*Include:*
+
+- Data snapshot (number of rows/cols, fraction missing per variable).
+- Missingness diagnostics and visualizations (e.g., `naniar::vis_miss()`, `gg_miss_var()`).
+- Rationale for chosen method (why MI vs deletion, assumptions about MCAR/MAR/MNAR).
+
+## Documenting your work — why it matters (contd)
+
+- Exact code used for imputation and resampling (ideally in a script or notebook).
+- Versioned session info: `sessionInfo()` or `renv` lockfile.
+- If MI used: number of imputations `m`, method for each variable, pooling method.
+
+
+
+## Documentation checklist (template)
+
+- [ ] Data provenance & snapshot
+- [ ] Missingness summaries & plots
+- [ ] Justification of missingness assumption
+- [ ] Imputation method & hyperparameters
+- [ ] How imputation was applied during modeling (CV details)
+- [ ] Code chunk with `sessionInfo()` / `renv` details
+
+
+
+# Example: reproducible reporting chunk
+
+```r
+# report important reproducibility items
+cat("Rows:", nrow(data), "\n")
+map_dfr(data, ~ tibble(variable = deparse(substitute(.x)), missing = sum(is.na(.x)), pct = mean(is.na(.x))))
+
+# quick missingness plot
+library(naniar)
+vis_miss(data)
+
+# session info
+sessionInfo()
+```

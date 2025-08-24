@@ -1,0 +1,48 @@
+
+```{r}
+# Load required packages
+library(dplyr)
+library(tidyr)
+
+# Sample dataset
+data <- data.frame(
+  Department = c("HR", "IT", "IT", "HR", "Finance", "Finance", "IT"),
+  Employee   = c("Alice", "Bob", "Charlie", "David", "Eve", "Frank", "Grace"),
+  Salary     = c(50000, 60000, 55000, 52000, 70000, 72000, 58000),
+  Bonus      = c(5000, 6000, 5500, NA, 7000, 7500, 5800)
+)
+
+# View the data
+data
+
+
+```
+
+```{r}
+# Summarizing with dplyr
+summary_tbl <- data |>
+  group_by(Department) |>
+  summarise(
+    Avg_Salary = mean(Salary, na.rm = TRUE),
+    Total_Bonus = sum(Bonus, na.rm = TRUE),
+    Employee_Count = n()
+  )
+
+summary_tbl
+
+
+```
+
+
+```{r}
+#  Using tidyr to reshape the summary table
+summary_long <- summary_tbl |>
+  pivot_longer(
+    cols = c(Avg_Salary, Total_Bonus, Employee_Count),
+    names_to = "Metric",
+    values_to = "Value"
+  )
+
+summary_long
+```
+

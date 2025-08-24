@@ -1,0 +1,31 @@
+
+```{r}
+# Load necessary package
+library(dplyr)
+
+# Sample data with missing values
+df <- data.frame(
+  group = rep(c("A", "B"), each = 5),
+  score = c(5, 8, NA, 7, NA, 6, 9, 10, NA, 4)
+)
+
+get_mode <- function(v) {
+  uniq_vals <- unique(v[!is.na(v)])
+  uniq_vals[which.max(tabulate(match(v, uniq_vals)))]
+}
+
+
+```
+
+```{r}
+df_dplyr <- df |>
+  select(group, score) |>
+  group_by(group) |>
+  mutate(
+    score_mean_imp = if_else(is.na(score), mean(score, na.rm = TRUE), score),
+    score_median_imp = if_else(is.na(score), median(score, na.rm = TRUE), score),
+    score_mode_imp = if_else(is.na(score), get_mode(score), score)
+  ) |>
+  ungroup()
+```
+
