@@ -44,4 +44,5 @@ miss_case_summary(data)
 # statistical test for missing
 mcar_test(data)
 ```
-
+- The null hypothesis is that the data is MCAR
+- The alternative hypotheis is that the dat is not MCAR

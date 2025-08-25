@@ -56,7 +56,7 @@ Missing data occurs when **no data value is stored** for a variable in an observ
 
 # Original dataset: 1000 observations
 # After listwise deletion: 300 observations
-# Lost 70% of data!
+# Lost 30% of data!
 ```
 
 ### Consequences:
@@ -102,25 +102,4 @@ naniar::vis_miss(data)
 naniar::gg_miss_var(data)
 ```
 
-## Pattern Analysis
-```{r}
-#| echo: true
-#| eval: false
 
-# Missing data patterns
-library(mice)
-mice::md.pattern(data)
-
-# Correlations between missingness
-naniar::gg_miss_upset(data)
-```
-
-
-## Key Takeaways 💡
-
-1. **Identify the mechanism** → Choose appropriate handling method
-2. **Visualize patterns** → Understand missingness structure  
-3. **Don't ignore it** → Missing data affects all downstream analysis
-4. **Document decisions** → Report how missing data was handled
-
-> *"The way you handle missing data can make or break your analysis"*

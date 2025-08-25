@@ -7,7 +7,7 @@ library(Amelia)
 data <- data.frame(
   ID    = 1:8,
   Name  = c("Alice", "Bob", "Charlie", "David", "Eve", NA, "Grace", "Henry"),
-  Age   = c(25, NA, 30, 28, NA, 35, 29, NA),
+  Age   = c(25, NA, NA, 28, NA, 35, 29, NA),
   Score = c(90, 85, NA, 88, 92, 80, NA, 75)
 )
 

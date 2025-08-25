@@ -6,10 +6,10 @@ library(tidyr)
 
 # Sample dataset
 data <- data.frame(
-  Department = c("HR", "IT", "IT", "HR", "Finance", "Finance", "IT"),
-  Employee   = c("Alice", "Bob", "Charlie", "David", "Eve", "Frank", "Grace"),
-  Salary     = c(50000, 60000, 55000, 52000, 70000, 72000, 58000),
-  Bonus      = c(5000, 6000, 5500, NA, 7000, 7500, 5800)
+  Department = c("HR", NA, "IT", "HR", "Finance", "Finance", "IT"),
+  Employee   = c("Alice", "Bob", NA, "David", "Eve", "Frank", "Grace"),
+  Salary     = c(50000, 60000, 55000, NA, 70000, NA, 58000),
+  Bonus      = c(NA, 6000, 5500, NA, 7000, 7500, 5800)
 )
 
 # View the data
