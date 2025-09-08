@@ -43,6 +43,7 @@ print(head(df, 10))
 a <- aggr(df, plot = FALSE)
 plot(a, numbers = TRUE, prop = FALSE)
 ```
+
 ```{r}
 sapply(df, function(x)sum(is.na(x)))
 ```
@@ -60,12 +61,15 @@ imp_match <- matchImpute(df, variable = "gender", match_var = c("income","score"
 
 aggr(imp_knn, delimiter = "_imp")
 ```
+
 ```{r}
 aggr(imp_match, delimiter = "_imp")
 ```
+
 ```{r}
 head(imp_knn)
 ```
+
 ```{r}
 sapply(imp_knn, function(x)sum(is.na(x)))
 ```

@@ -3,6 +3,7 @@
 library(naniar)
 library(ggplot2) # naniar builds on ggplot2
 
+
 # Sample dataset with missing values
 data <- data.frame(
   ID    = 1:8,
@@ -37,6 +38,7 @@ gg_miss_var(data)
 ```{r}
 # numerical summary for missing
 miss_var_summary(data)
+
 miss_case_summary(data)
 ```
 
@@ -45,4 +47,4 @@ miss_case_summary(data)
 mcar_test(data)
 ```
 - The null hypothesis is that the data is MCAR
-- The alternative hypotheis is that the dat is not MCAR
+- The alternative hypothesis is that the data is not MCAR

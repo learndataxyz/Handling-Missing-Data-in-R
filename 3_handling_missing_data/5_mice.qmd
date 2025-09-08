@@ -31,10 +31,16 @@ imp
 
 
 # Get the first completed dataset
-df_complete1 <- complete(imp, 1)
+df_complete1 <- complete(imp, 5)
 
 df_complete1
 
+for(i in 1:5) {
+  cat(paste("Imputed Dataset", i, ":\n"))
+  data = complete(imp, i)
+  print(mean(data$score, na.rm = TRUE))
+  cat("\n")
+}
 
 ```
 
@@ -56,7 +62,7 @@ df_mice_group <- df |>
   group_split(group) |>
   lapply(function(sub_df) {
     imp_sub <- mice(sub_df, m = 3, method = "pmm", seed = 123)
-    complete(imp_sub, 1)  # take first imputed dataset per group
+    complete(imp_sub, 3)  # take first imputed dataset per group
   }) |>
   bind_rows()
 
